@@ -10,7 +10,33 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors());
+// app.use(cors());
+const cors = require('cors');
+
+// Allow only localhost (any port) and sirc.travyfy.com
+const allowlist = [
+    /^http:\/\/localhost(?::\d+)?$/,  // http://localhost, any port
+    /^https:\/\/sirc\.travyfy\.com$/, // https://sirc.travyfy.com
+];
+
+const corsOptions = {
+    origin(origin, callback) {
+        // Allow non-browser tools (no Origin header): curl, Postman, server-to-server
+        if (!origin) return callback(null, true);
+
+        const allowed = allowlist.some((re) => re.test(origin));
+        if (allowed) return callback(null, true);
+
+        return callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true, // set true only if you use cookies/auth headers across origins
+};
+
+app.use(cors(corsOptions));
+// Preflight
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

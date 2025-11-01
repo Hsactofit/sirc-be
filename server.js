@@ -11,7 +11,7 @@ connectDB();
 
 // Middleware
 // app.use(cors());
-const cors = require('cors');
+// const cors = require('cors');
 
 // Allow only localhost (any port) and sirc.travyfy.com
 const allowlist = [

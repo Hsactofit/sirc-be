@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+const { EmailApiService } = require('./EmailApiService');
 const fs = require('fs');
 const path = require('path');
 
@@ -34,24 +34,6 @@ const getFromAddress = () => {
 
   return process.env.EMAIL_USER;
 };
-
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    service: "gmail",                                     // false for 587, true for 465
-    auth: {
-      user: (process.env.EMAIL_USER || '').trim(),     // you@yourdomain.com
-      pass: (process.env.EMAIL_PASSWORD || '').trim(), // 16-char App Password
-    },
-    connectionTimeout: 80000,
-    greetingTimeout: 30000,
-    socketTimeout: 80000,
-    logger: true,
-    debug: true,
-  });
-};
-
-module.exports = { createTransporter };
-
 
 // Check if promotion poster exists
 const hasPromotionPoster = () => Boolean(PROMOTION_POSTER_PATH);
@@ -337,8 +319,6 @@ const getPartyJoinedTemplate = (meeting, joinedParticipant) => {
 
 // Send meeting invitation
 const sendMeetingInvitation = async (meeting) => {
-  const transporter = createTransporter();
-
   // Collect all recipients
   const recipients = [];
 
@@ -381,15 +361,16 @@ const sendMeetingInvitation = async (meeting) => {
   const emailHTML = getMeetingInvitationTemplate(meeting, promotionHtml);
   const fromAddress = getFromAddress();
 
-  // Send emails
+  // Send emails using EmailApiService
   const emailPromises = recipients.map(recipient => {
     const attachments = promotionAttachments.map(attachment => ({ ...attachment }));
-    return transporter.sendMail({
-      from: fromAddress,
+    
+    return EmailApiService.sendEmail({
       to: recipient.email,
       subject: `Meeting Invitation: ${meeting.title}`,
-      html: emailHTML,
-      attachments
+      htmlTemplate: emailHTML,
+      from: fromAddress,
+      attachments: attachments.length > 0 ? attachments : null
     });
   });
 
@@ -405,8 +386,6 @@ const sendMeetingInvitation = async (meeting) => {
 
 // Send party joined notification
 const sendPartyJoinedNotification = async (meeting, joinedParticipant) => {
-  const transporter = createTransporter();
-
   // Collect all recipients except the one who joined
   const recipients = [];
 
@@ -448,13 +427,13 @@ const sendPartyJoinedNotification = async (meeting, joinedParticipant) => {
   const emailHTML = getPartyJoinedTemplate(meeting, joinedParticipant);
   const fromAddress = getFromAddress();
 
-  // Send emails
+  // Send emails using EmailApiService
   const emailPromises = recipients.map(recipient => {
-    return transporter.sendMail({
-      from: fromAddress,
+    return EmailApiService.sendEmail({
       to: recipient.email,
       subject: `${joinedParticipant.name} has joined: ${meeting.title}`,
-      html: emailHTML
+      htmlTemplate: emailHTML,
+      from: fromAddress
     });
   });
 

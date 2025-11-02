@@ -42,9 +42,9 @@ const createTransporter = () => {
       user: (process.env.EMAIL_USER || '').trim(),     // you@yourdomain.com
       pass: (process.env.EMAIL_PASSWORD || '').trim(), // 16-char App Password
     },
-    connectionTimeout: 20000,
-    greetingTimeout: 10000,
-    socketTimeout: 30000,
+    connectionTimeout: 80000,
+    greetingTimeout: 30000,
+    socketTimeout: 80000,
     logger: true,
     debug: true,
   });

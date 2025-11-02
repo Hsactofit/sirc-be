@@ -35,18 +35,33 @@ const getFromAddress = () => {
   return process.env.EMAIL_USER;
 };
 
-// Create transporter
 const createTransporter = () => {
+  const port = Number((process.env.EMAIL_PORT || '587').trim());
+  const secure = port === 465 || (process.env.EMAIL_SECURE || '').trim() === 'true';
+
   return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: process.env.EMAIL_SECURE === 'true',
+    host: (process.env.EMAIL_HOST || '').trim(),   // smtp.gmail.com
+    port,
+    secure,                                        // false for 587, true for 465
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD
-    }
+      user: (process.env.EMAIL_USER || '').trim(),     // you@yourdomain.com
+      pass: (process.env.EMAIL_PASSWORD || '').trim(), // 16-char App Password
+    },
+    family: 4,                // <-- force IPv4 on Render
+    connectionTimeout: 20000,
+    greetingTimeout: 10000,
+    socketTimeout: 30000,
+    tls: {
+      servername: (process.env.EMAIL_HOST || '').trim(),
+      rejectUnauthorized: true,
+    },
+    logger: true,
+    debug: true,
   });
 };
+
+module.exports = { createTransporter };
+
 
 // Check if promotion poster exists
 const hasPromotionPoster = () => Boolean(PROMOTION_POSTER_PATH);
